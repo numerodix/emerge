@@ -73,10 +73,7 @@ class Parser(object):
 
     def get_dict(self, file):
         f = open(file)
-        try:
-            dct = yaml.load(f)
-        except:
-            raise ParseError()
+        dct = yaml.load(f)
         f.close()
         return dct
 
@@ -106,21 +103,24 @@ class Parser(object):
         project.new(*args, **kw)
 
     def parse(self, file):
-        dct = self.get_dict(file)
-
         try:
-            root = dct["project"]
-        except KeyError:
-            raise ParseError("Could not find root node: %s" % "project")
+            dct = self.get_dict(file)
 
-        root = self.resolve_vars(root, {})
-        project = self.parse_project(root)
+            try:
+                root = dct["project"]
+            except KeyError:
+                raise ParseError("Could not find root node: %s" % "project")
 
-        try:
-            pkgs = root["packages"]
-        except KeyError:
-            raise ParseError("Could not find node: %s" % "packages")
+            root = self.resolve_vars(root, {})
+            project = self.parse_project(root)
 
-        [self.parse_package(project, k,v) for (k,v) in pkgs.items()]
+            try:
+                pkgs = root["packages"]
+            except KeyError:
+                raise ParseError("Could not find node: %s" % "packages")
 
-        return project
+            [self.parse_package(project, k,v) for (k,v) in pkgs.items()]
+
+            return project
+        except:
+            raise ParseError()
