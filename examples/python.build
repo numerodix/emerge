@@ -1,0 +1,16 @@
+%YAML 1.1
+---
+project:
+    ins_path: /home/alex/t
+    url: http://python.org/ftp/python
+
+    conf: ./configure --prefix=${ins_path}
+    build: make
+    install: make install
+
+    packages:
+        python-2.4.6:
+            url: ${url}/2.4.6/Python-2.4.6.tgz
+            configure: ${conf}/py24
+            build: ${build}
+            install: ${install}
