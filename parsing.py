@@ -103,24 +103,21 @@ class Parser(object):
         project.new(*args, **kw)
 
     def parse(self, file):
+        dct = self.get_dict(file)
+
         try:
-            dct = self.get_dict(file)
+            root = dct["project"]
+        except KeyError:
+            raise ParseError("Could not find root node: %s" % "project")
 
-            try:
-                root = dct["project"]
-            except KeyError:
-                raise ParseError("Could not find root node: %s" % "project")
+        root = self.resolve_vars(root, {})
+        project = self.parse_project(root)
 
-            root = self.resolve_vars(root, {})
-            project = self.parse_project(root)
+        try:
+            pkgs = root["packages"]
+        except KeyError:
+            raise ParseError("Could not find node: %s" % "packages")
 
-            try:
-                pkgs = root["packages"]
-            except KeyError:
-                raise ParseError("Could not find node: %s" % "packages")
+        [self.parse_package(project, k,v) for (k,v) in pkgs.items()]
 
-            [self.parse_package(project, k,v) for (k,v) in pkgs.items()]
-
-            return project
-        except:
-            raise ParseError()
+        return project

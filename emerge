@@ -70,8 +70,9 @@ if __name__ == "__main__":
             project = parsing.Parser().parse(buildfile)
         except NameError:
             raise IndexError()
-        except:
+        except Exception, e:
             print("Failed to read build file: %s" % buildfile)
+            print(e)
             sys.exit(1)
 
         action = sys.argv[1]
