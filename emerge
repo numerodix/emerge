@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2009 Martin Matusiak <numerodix@gmail.com>
+# Licensed under the GNU Public License, version 3.
+#
+# <desc> Simple package installer </desc>
+
+import glob
+import os
+import sys
+
+import model
+import parsing
+
+class OptHelper(object):
+    @staticmethod
+    def find_arg(argv, args):
+        for arg in args:
+            if arg in argv:
+                argv.remove(arg)
+                return True, argv
+        return False, argv
+
+    @staticmethod
+    def find_arg_v(argv, args):
+        for arg in args:
+            if arg in argv:
+                val = argv[argv.index(arg) + 1]
+                argv.remove(val)
+                argv.remove(arg)
+                return val, argv
+        return None, argv
+
+    @staticmethod
+    def find_arg_s(argv, s, args):
+        found, argv = OptHelper.find_arg(argv, args)
+        if found:
+            return s, argv
+        return None, argv
+
+    @staticmethod
+    def find_buildfile():
+        gl = glob.glob("*.build")
+        if len(gl) == 1:
+            print("Using build file: %s" % gl[0])
+            return gl[0]
+
+
+if __name__ == "__main__":
+    try:
+        appname = os.path.basename(sys.argv[0])
+
+        help, sys.argv = OptHelper.find_arg(sys.argv, ["-h", "--help"])
+        if help:
+            raise IndexError()
+
+        try:
+            try:
+                buildfile = sys.argv[1]
+                if not os.path.exists(buildfile):
+                    raise Exception()
+                sys.argv.pop(1)
+            except:
+                tryfind = OptHelper.find_buildfile()
+                buildfile = tryfind and tryfind or buildfile
+
+            if not os.path.exists(buildfile):
+                raise Exception()
+
+            project = parsing.Parser().parse(buildfile)
+        except NameError:
+            raise IndexError()
+        except:
+            print("Failed to read build file: %s" % buildfile)
+            sys.exit(1)
+
+        action = sys.argv[1]
+
+        rev, sys.argv = OptHelper.find_arg_v(sys.argv, ["-r", "--revision"])
+        if rev:
+            project.set_revision(rev)
+
+        if action in ["-l","--list"]:
+            project.list()
+            sys.exit()
+
+        if action in ["-s","--search"]:
+            pkg = sys.argv[2]
+            project.search(pkg)
+            sys.exit()
+
+        nodeps, argv = OptHelper.find_arg(sys.argv[1:], ["-0", "--nodeps"])
+
+        fetch, argv = OptHelper.find_arg_s(argv, "fetch", ["-f", "--fetch"])
+        conf, argv = OptHelper.find_arg_s(argv, "configure", ["-c", "--conf"])
+        build, argv = OptHelper.find_arg_s(argv, "build", ["-b", "--build"])
+        install, argv = OptHelper.find_arg_s(argv, "install", ["-i", "--install"])
+        merge = not (fetch or conf or build or install) and "merge" or None
+
+        pretend, argv = OptHelper.find_arg(argv, ["-p", "--pretend"])
+        if pretend:
+            project.pretend(argv, nodeps=nodeps)
+            sys.exit()
+
+        project.run((fetch, conf, build, install, merge), argv, nodeps=nodeps)
+    except IndexError:
+        ss = ["Usage:  %s %s %s" % (appname, "project.build", "(pkg+)")]
+        fmt = "  %-24.24s  %s"
+        ss.append("Flags:")
+        ss.append(fmt % ("-p, --pretend", "Only list computed package list"))
+        ss.append(fmt % ("-0, --nodeps", "Install without dependencies"))
+        ss.append(fmt % ("-f, --fetch", "Fetch packages"))
+        ss.append(fmt % ("-c, --conf", "Configure packages"))
+        ss.append(fmt % ("-b, --build", "Build packages"))
+        ss.append(fmt % ("-i, --install", "Install packages"))
+        ss.append(fmt % ("-r, --revision rev", "Fetch this revision"))
+        ss.append("Other actions:")
+        ss.append(fmt % (appname+"  -l, --list", "List all packages in project"))
+        ss.append(fmt % (appname+"  -s, --search pkg", "Search for package"))
+        ss.append(fmt % (appname+"  -h, --help", "Show this message"))
+        print("\n".join(ss))
+        sys.exit(2)
