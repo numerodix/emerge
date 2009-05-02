@@ -198,6 +198,8 @@ class Package(object):
         # move all items recursively to workdir
         Helper.invoke(dir, "mkdir -p %s" % workdir)
         Helper.invoke(dir, "mv * %s" % workdir)
+        if os.path.exists(downdir):
+            shutil.rmtree(downdir)
 
     def configure(self, index):
         Helper.set_term_title("%s Configuring %s" % (index, self.name))

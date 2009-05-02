@@ -14,3 +14,21 @@ project:
             configure: ${conf}/py24
             build: ${build}
             install: ${install}
+
+        python-2.5.4:
+            url: ${url}/2.5.4/Python-2.5.4.tgz
+            configure: ${conf}/py25
+            build: ${build}
+            install: ${install}
+
+        python-2.6.2:
+            url: ${url}/2.6.2/Python-2.6.2.tgz
+            configure: ${conf}/py26
+            build: ${build}
+            install: ${install}
+
+        python-3.0.1:
+            url: ${url}/3.0.1/Python-3.0.1.tgz
+            configure: ${conf}/py30
+            build: ${build}
+            install: ${install}
