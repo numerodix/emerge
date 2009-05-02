@@ -1,8 +1,10 @@
 # Copyright (c) 2009 Martin Matusiak <numerodix@gmail.com>
 # Licensed under the GNU Public License, version 3.
 
+import glob
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -19,15 +21,19 @@ class Helper(object):
 
         popen = subprocess.Popen(args, cwd=cwd, shell=True,
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output = ""
         while popen.poll() == None:
-            output = popen.stdout.readline().strip()
-            if output:
-                print(output)
+            line = popen.stdout.readline().strip()
+            if line:
+                print(line)
+                output += line
             else:
                 time.sleep(0.1)
 
         if popen.wait() != 0:
             raise Exception("Process exited with error")
+
+        return output
 
     @staticmethod
     def set_term_title(s):
@@ -76,8 +82,9 @@ class Phase(object):
                 return v
 
 class Package(object):
-    def __init__(self, name, src_path=None, src_dir=None, deps=None, svnurl=None,
-                 giturl=None, rev=None, configure=None, build=None, install=None):
+    def __init__(self, name, src_path=None, src_dir=None, deps=None,
+                 giturl=None, svnurl=None, url=None, rev=None,
+                 configure=None, build=None, install=None):
         self.name = name
         self.src_dir = src_dir or name
         self.deps = deps or []
@@ -91,6 +98,9 @@ class Package(object):
             self.phases[Phase.fetch] = self.fetch_svn
             self.fetch_url = svnurl
             self.fetch_rev = rev or "HEAD"
+        if url:
+            self.phases[Phase.fetch] = self.fetch_url
+            self.fetch_url = url
         if configure:
             self.phases[Phase.configure] = self.configure
             self.configure_cmd = configure
@@ -145,6 +155,49 @@ class Package(object):
         Helper.invoke(workdir,
                       "svn checkout -r %s %s ." % (self.fetch_rev,
                                                    self.fetch_url))
+
+    def fetch_url(self, index):
+        """Tries to fetch any type of archive and decide how to proceed by file
+        type detection"""
+        Helper.set_term_title("%s Fetching %s from %s" %
+                              (index, self.name, self.fetch_url))
+        workdir = os.path.join(self.src_path, self.src_dir)
+        # download to downloads dir
+        downdir = os.path.join(self.src_path, "downloads")
+        filename = os.path.basename(self.fetch_url)
+        if os.path.exists(downdir):
+            shutil.rmtree(downdir)
+        Helper.invoke(downdir,"(wget %s || curl %s -o %s)" % (self.fetch_url,
+                                                              self.fetch_url,
+                                                              filename))
+        # extract if archive
+        filename = glob.glob(os.path.join(downdir, "*"))[0]
+        type = Helper.invoke(downdir, "file %s" % filename)
+        if re.search("gzip compressed data", type):
+            Helper.invoke(downdir, "gzip -d %s" % filename)
+            filename = glob.glob(os.path.join(downdir, "*"))[0]
+            type = Helper.invoke(downdir, "file %s" % filename)
+        if re.search("bzip2 compressed data", type):
+            Helper.invoke(downdir, "bzip2 -d %s" % filename)
+            filename = glob.glob(os.path.join(downdir, "*"))[0]
+            type = Helper.invoke(downdir, "file %s" % filename)
+        if re.search("tar archive", type):
+            Helper.invoke(downdir, "tar -xf - < %s" % filename)
+            Helper.invoke(downdir, "rm -f %s" % filename)
+        if re.search("Zip archive data", type):
+            Helper.invoke(downdir, "unzip %s" % filename)
+            Helper.invoke(downdir, "rm -f %s" % filename)
+        # try to detect if we extracted to a subdir or not
+        gl = glob.glob(os.path.join(downdir, "*"))
+        if len(gl) == 1 and os.path.isdir(gl[0]):
+            # if yes, anchor inside subdir
+            dir = os.path.join(downdir, gl[0])
+        else:
+            # if no, anchor in downloads dir
+            dir = downdir
+        # move all items recursively to workdir
+        Helper.invoke(dir, "mkdir -p %s" % workdir)
+        Helper.invoke(dir, "mv * %s" % workdir)
 
     def configure(self, index):
         Helper.set_term_title("%s Configuring %s" % (index, self.name))
