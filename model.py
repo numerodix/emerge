@@ -54,7 +54,7 @@ class Helper(object):
 
     @staticmethod
     def merge_paths(paths):
-        fst = paths.pop(len(paths) - 1)
+        fst = paths.pop(0)
         for path in paths:
             for i in fst:
                 for j in path:
