@@ -23,12 +23,17 @@ class Helper(object):
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = ""
         while popen.poll() == None:
-            line = popen.stdout.readline().strip()
-            if line:
-                print(line)
-                output += line
+            s = popen.stdout.readline().strip()
+            if s:
+                print(s)
+                output += s
             else:
                 time.sleep(0.1)
+
+        # try to read off ending
+        s = popen.stdout.read().strip()
+        print(s)
+        output += s
 
         if popen.wait() != 0:
             raise Exception("Process exited with error")
