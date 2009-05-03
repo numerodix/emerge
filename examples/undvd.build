@@ -1,9 +1,0 @@
-%YAML 1.1
----
-project:
-    ins_path: /tmp/t
-
-    packages:
-        undvd:
-            giturl: git://repo.or.cz/undvd.git
-            install: DESTDIR=${ins_path} make install

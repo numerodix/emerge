@@ -45,6 +45,10 @@ class Helper(object):
         print("\033]2;%s\007" % s)
 
     @staticmethod
+    def set_bold_font(s):
+        return "\033[1m%s\033[0m" % s
+
+    @staticmethod
     def write_set_env(env):
         # set env
         for (k,v) in env.items():
@@ -108,16 +112,16 @@ class Package(object):
             self.fetch_url = url
         if configure:
             self.phases[Phase.configure] = self.configure
-            self.configure_cmd = configure
+            self.configure_cmd = configure.strip()
         if build:
             self.phases[Phase.build] = self.build
-            self.build_cmd = build
+            self.build_cmd = build.strip()
         if install:
             self.phases[Phase.install] = self.install
-            self.install_cmd = install
+            self.install_cmd = install.strip()
 
     def __str__(self):
-        fmt = "%15.15s : %s"
+        fmt = "%s : %s" % (Helper.set_bold_font("%15.15s"), "%s")
         lines = []
         lines.append(fmt % ("name", self.name))
         lines.append(fmt % ("src_dir", self.src_dir))
