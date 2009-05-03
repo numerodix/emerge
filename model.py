@@ -191,7 +191,7 @@ class Package(object):
             filename = glob.glob(os.path.join(downdir, "*"))[0]
             type = Helper.invoke(downdir, "file %s" % filename)
         if re.search("tar archive", type):
-            Helper.invoke(downdir, "tar -xf - < %s" % filename)
+            Helper.invoke(downdir, "tar -v -xf - < %s" % filename)
             Helper.invoke(downdir, "rm -f %s" % filename)
         if re.search("Zip archive data", type):
             Helper.invoke(downdir, "unzip %s" % filename)
