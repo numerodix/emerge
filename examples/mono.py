@@ -69,20 +69,6 @@ project = {
             "install": install,
             "deps": [mono],
         },
-        mono_addins: {
-            "svnurl": "%s/%s" % (svnbase, mono_addins),
-            "configure": conf,
-            "build": build,
-            "install": install,
-            "deps": [mono],
-        },
-        mono_tools: {
-            "svnurl": "%s/%s" % (svnbase, mono_tools),
-            "configure": conf,
-            "build": build,
-            "install": install,
-            "deps": [mono],
-        },
         gtk_sharp: {
             "svnurl": "%s/%s" % (svnbase, gtk_sharp),
             "configure": "./bootstrap-2.14 --prefix=%s" % (ins_path),
@@ -90,12 +76,26 @@ project = {
             "install": install,
             "deps": [libgdiplus, mono],
         },
+        mono_addins: {
+            "svnurl": "%s/%s" % (svnbase, mono_addins),
+            "configure": conf,
+            "build": build,
+            "install": install,
+            "deps": [gtk_sharp],
+        },
         gnome_sharp: {
             "svnurl": "%s/%s" % (svnbase, gnome_sharp),
             "configure": "./bootstrap-2.24 --prefix=%s" % (ins_path),
             "build": build,
             "install": install,
             "deps": [gtk_sharp],
+        },
+        mono_tools: {
+            "svnurl": "%s/%s" % (svnbase, mono_tools),
+            "configure": conf,
+            "build": build,
+            "install": install,
+            "deps": [mono, gtk_sharp, gnome_sharp],
         },
         monodoc_widgets: {
             "svnurl": "%s/%s" % (svnbase, monodoc_widgets),
