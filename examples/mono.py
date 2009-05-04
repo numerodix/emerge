@@ -12,7 +12,7 @@ env = os.environ.get
 
 for v in ("libgdiplus", "mcs", "olive", "mono", "debugger", "mono-addins",
           "mono-tools", "gtk-sharp", "gnome-sharp", "monodoc-widgets",
-          "monodevelop", "paint-net"):
+          "monodevelop", "paint-net", "solarbeam"):
     exec("%s='%s'" % (v.replace("-", "_"), v))
 
 monodevelop_profile = """
@@ -119,6 +119,13 @@ project = {
             "build": "cd src && %s" % build,
             "install": "cd src && %s" % install,
             "deps": [libgdiplus, mono],
+        },
+        solarbeam: {
+            "giturl": "git://solarbeam.git.sourceforge.net/gitroot/solarbeam",
+            "rev": "1.0",
+            "build": "make",
+            "install": "./gui",
+            "deps": [libgdiplus, mono, monodevelop],
         },
     },
 }
