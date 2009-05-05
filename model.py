@@ -23,16 +23,16 @@ class Helper(object):
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = ""
         while popen.poll() == None:
-            s = popen.stdout.readline().strip()
+            s = popen.stdout.readline()
             if s:
-                print(s)
+                sys.stdout.write(s)
                 output += s
             else:
                 time.sleep(0.1)
 
         # try to read off ending
-        s = popen.stdout.read().strip()
-        print(s)
+        s = popen.stdout.read()
+        sys.stdout.write(s)
         output += s
 
         if popen.wait() != 0:
