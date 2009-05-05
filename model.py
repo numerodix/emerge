@@ -279,10 +279,18 @@ class Project(object):
     def search(self, pkg_name):
         try:
             print(self.pkgs[pkg_name])
-        except:
+        except KeyError:
             print("Package not found: %s" % pkg_name)
 
     def pretend(self, pkgs, nodeps=False):
+        # exit on mistyped package name
+        for pkg_name in pkgs:
+            try:
+                self.pkgs[pkg_name]
+            except KeyError:
+                print("Package not found: %s" % pkg_name)
+                sys.exit(1)
+
         path = pkgs
         if not nodeps:
             path = self.get_path_unified(pkgs)
