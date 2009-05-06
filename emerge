@@ -4,6 +4,8 @@
 # Licensed under the GNU Public License, version 3.
 #
 # <desc> Simple package installer </desc>
+#
+# Rationale and intro: http://www.matusiak.eu/numerodix/blog/index.php/2009/05/04/repeatable-one-off-builds-with-emerge/
 
 import glob
 import os
