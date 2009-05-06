@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
         project.run((fetch, conf, build, install, merge), argv, nodeps=nodeps)
     except IndexError:
-        ss = ["Usage:  %s %s %s" % (appname, "project.build", "(pkg+)")]
+        ss = ["Usage:  %s %s %s" % (appname, "project.py", "(pkg+)")]
         fmt = "  %-24.24s  %s"
         ss.append("Flags:")
         ss.append(fmt % ("-p, --pretend", "Only list computed package list"))
