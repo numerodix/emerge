@@ -13,6 +13,7 @@ class ParseError(Exception): pass
 class Parser(object):
     def load(self, file):
         full = os.path.abspath(file)
+        file = os.path.basename(full)
         sys.path.append(os.path.dirname(full))
         (root, _) = os.path.splitext(file)
         mod = __import__(root)
