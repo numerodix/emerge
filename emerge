@@ -42,7 +42,7 @@ class OptHelper(object):
 
     @staticmethod
     def find_buildfile():
-        gl = glob.glob("*.build")
+        gl = glob.glob("*.py")
         if len(gl) == 1:
             print("Using build file: %s" % gl[0])
             return gl[0]
