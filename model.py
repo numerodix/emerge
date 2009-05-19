@@ -82,11 +82,11 @@ class Helper(object):
         cwd_prev = os.getcwd()
         os.chdir(source)
         for (d, _, fs) in os.walk("."):
+            d_to = os.path.join(target, d)
+            if not os.path.exists(d_to):
+                os.makedirs(d_to)
             for f in fs:
                 f_from = os.path.join(d, f)
-                d_to = os.path.join(target, d)
-                if not os.path.exists(d_to):
-                    os.makedirs(d_to)
                 f_to = os.path.join(d_to, f)
                 shutil.move(f_from, f_to)
         os.chdir(cwd_prev)
