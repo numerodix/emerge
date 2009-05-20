@@ -1,4 +1,6 @@
-ins_path = "/home/alex/t"
+import os
+
+ins_path = "%s/t" % os.environ["HOME"]
 url = "http://python.org/ftp/python"
 
 conf = "./configure --prefix=%s" % ins_path

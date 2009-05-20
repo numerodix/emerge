@@ -241,7 +241,7 @@ class Package(object):
         workdir = self.get_workdir()
         self.wipedirs(downdir, workdir)
         self.initdirs(workdir)
-        Helper.invoke(downdir, self.fetch_cmd, env={"WORKDIR": workdir})
+        Helper.invoke(downdir, self.fetch_cmd)
         self.wipedirs(downdir)
 
     def configure(self, index):

@@ -1,4 +1,6 @@
-ins_path = "/home/alex/t/haskell"
+import os
+
+ins_path = "%s/t/haskell" % os.environ["HOME"]
 
 project = {
     "ins_path": ins_path,
@@ -12,7 +14,7 @@ project = {
             ]),
             "install": "cp -r * %s" % ins_path,
         },
-        # Binary package, building from source fails
+        # Binary x86 package, building from source fails.
         # Missing realine4 on Ubuntu jaunty
         "ghc-6.8.1": {
             "url": "http://www.haskell.org/ghc/dist/6.8.1/ghc-6.8.1-i386-unknown-linux.tar.bz2",
