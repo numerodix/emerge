@@ -4,25 +4,21 @@ project = {
     "ins_path": ins_path,
 
     "packages": {
-        # needs Happy, Alex, Haddock and a Haskell compiler (obviously)
-        "ghc-6.8.1": {
-            "fetch": " && ".join([
-                "ver=6.8.1",
-                "basefile=ghc-$ver-src.tar.bz2",
-                "libfile=ghc-$ver-src-extralibs.tar.bz2",
-                "baseurl=http://www.haskell.org/ghc/dist/$ver/$basefile",
-                "liburl=http://www.haskell.org/ghc/dist/$ver/$libfile",
-                "(wget $baseurl || curl $baseurl -o $basefile)",
-                "(wget $liburl || curl $liburl -o $libfile)",
-                "bunzip2 -c $basefile | tar -xf -",
-                "bunzip2 -c $libfile | tar -xf -",
-                "rm -f $basefile",
-                "rm -f $libfile",
-                "mv ghc-$ver/* $WORKDIR",
+        "readline4": {
+            "url": "http://www.haskell.org/ghc/dist/6.4/readline-compat-4.3-307.i586.rpm",
+            "configure": " && ".join([
+                "rpm2cpio *.rpm | cpio -idmv",
+                "rm -f *.rpm",
             ]),
+            "install": "cp -r * %s" % ins_path,
+        },
+        # Binary package, building from source fails
+        # Missing realine4 on Ubuntu jaunty
+        "ghc-6.8.1": {
+            "url": "http://www.haskell.org/ghc/dist/6.8.1/ghc-6.8.1-i386-unknown-linux.tar.bz2",
             "configure": "./configure --prefix %s" % ins_path,
-            "build": "make",
             "install": "make install",
+            "deps": ["readline4"],
         },
         "helium-1.7": {
             "url": "http://www.cs.uu.nl/people/jur/heliumsystem-20090428-src.tar.gz",
