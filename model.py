@@ -11,7 +11,7 @@ import time
 
 class Helper(object):
     @staticmethod
-    def invoke(cwd, args):
+    def invoke(cwd, args, env=None):
         print(">>>>> Running %s :: %s" % (cwd, args))
         try:
             if not os.path.exists(cwd):
@@ -19,7 +19,12 @@ class Helper(object):
         except:
             raise IOError("Failed to create dir: %s" % cwd)
 
-        popen = subprocess.Popen(args, cwd=cwd, shell=True,
+        if env:
+            target_env = os.environ
+            target_env.update(env)
+            env = target_env
+
+        popen = subprocess.Popen(args, cwd=cwd, shell=True, env=env,
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = ""
         while popen.poll() == None:
@@ -93,23 +98,27 @@ class Phase(object):
 class Package(object):
     def __init__(self, name, src_path=None, src_dir=None, deps=None,
                  giturl=None, svnurl=None, url=None, rev=None,
-                 configure=None, build=None, install=None):
+                 fetch=None, configure=None, build=None, install=None):
         self.name = name
         self.src_dir = src_dir or name
         self.deps = deps or []
         self.src_path = src_path
         self.phases = {}
-        if giturl:
-            self.phases[Phase.fetch] = self.fetch_git
-            self.fetch_url = giturl
-            self.fetch_rev = rev or "HEAD"
-        if svnurl:
-            self.phases[Phase.fetch] = self.fetch_svn
-            self.fetch_url = svnurl
-            self.fetch_rev = rev or "HEAD"
-        if url:
-            self.phases[Phase.fetch] = self.fetch_url
-            self.fetch_url = url
+        if fetch:
+            self.phases[Phase.fetch] = self.fetch
+            self.fetch_cmd = fetch.strip()
+        else:
+            if giturl:
+                self.phases[Phase.fetch] = self.fetch_git
+                self.fetch_url = giturl
+                self.fetch_rev = rev or "HEAD"
+            if svnurl:
+                self.phases[Phase.fetch] = self.fetch_svn
+                self.fetch_url = svnurl
+                self.fetch_rev = rev or "HEAD"
+            if url:
+                self.phases[Phase.fetch] = self.fetch_url
+                self.fetch_url = url
         if configure:
             self.phases[Phase.configure] = self.configure
             self.configure_cmd = configure.strip()
@@ -144,6 +153,24 @@ class Package(object):
 
         return "\n".join(lines)
 
+
+    def get_downdir(self):
+        return os.path.join(self.src_path, "downloads")
+
+    def get_workdir(self):
+        return os.path.join(self.src_path, self.src_dir)
+
+    def initdirs(self, *dirs):
+        for dir in dirs:
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+
+    def wipedirs(self, *dirs):
+        for dir in dirs:
+            if os.path.exists(dir):
+                shutil.rmtree(dir)
+
+
     def fetch_git(self, index):
         Helper.set_term_title("%s Fetching %s:%s from %s" %
                               (index, self.name, self.fetch_rev,
@@ -170,12 +197,11 @@ class Package(object):
         type detection"""
         Helper.set_term_title("%s Fetching %s from %s" %
                               (index, self.name, self.fetch_url))
-        workdir = os.path.join(self.src_path, self.src_dir)
+        downdir = self.get_downdir()
+        workdir = self.get_workdir()
+        self.wipedirs(downdir, workdir)
         # download to downloads dir
-        downdir = os.path.join(self.src_path, "downloads")
         filename = os.path.basename(self.fetch_url)
-        if os.path.exists(downdir):
-            shutil.rmtree(downdir)
         Helper.invoke(downdir,"(wget %s || curl %s -o %s)" % (self.fetch_url,
                                                               self.fetch_url,
                                                               filename))
@@ -207,22 +233,30 @@ class Package(object):
         # move all items recursively to workdir
         Helper.invoke(dir, "mkdir -p %s" % workdir)
         Helper.invoke(dir, "mv * %s" % workdir)
-        if os.path.exists(downdir):
-            shutil.rmtree(downdir)
+        self.wipedirs(downdir)
+
+    def fetch(self, index):
+        Helper.set_term_title("%s Fetching %s" % (index, self.name))
+        downdir = self.get_downdir()
+        workdir = self.get_workdir()
+        self.wipedirs(downdir, workdir)
+        self.initdirs(workdir)
+        Helper.invoke(downdir, self.fetch_cmd, env={"WORKDIR": workdir})
+        self.wipedirs(downdir)
 
     def configure(self, index):
         Helper.set_term_title("%s Configuring %s" % (index, self.name))
-        workdir = os.path.join(self.src_path, self.src_dir)
+        workdir = self.get_workdir()
         Helper.invoke(workdir, self.configure_cmd)
 
     def build(self, index):
         Helper.set_term_title("%s Building %s" % (index, self.name))
-        workdir = os.path.join(self.src_path, self.src_dir)
+        workdir = self.get_workdir()
         Helper.invoke(workdir, self.build_cmd)
 
     def install(self, index):
         Helper.set_term_title("%s Installing %s" % (index, self.name))
-        workdir = os.path.join(self.src_path, self.src_dir)
+        workdir = self.get_workdir()
         Helper.invoke(workdir, self.install_cmd)
 
 class Project(object):
