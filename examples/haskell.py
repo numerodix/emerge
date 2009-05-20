@@ -1,9 +1,15 @@
 import os
+env = os.environ.get
 
-ins_path = "%s/t/haskell" % os.environ["HOME"]
+ins_path = "%s/t/haskell" % env("HOME")
 
 project = {
     "ins_path": ins_path,
+
+    "environment": {
+        "PATH": "%s/bin:%s" % (ins_path, env("PATH","")),
+        "LD_LIBRARY_PATH": "%s/lib:%s" % (ins_path, env("LD_LIBRARY_PATH","")),
+    },
 
     "packages": {
         "readline4": {
