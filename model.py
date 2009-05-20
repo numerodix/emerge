@@ -11,12 +11,8 @@ import time
 
 class Helper(object):
     @staticmethod
-    def announce(s):
-        print(">>>>> %s" % s)
-
-    @staticmethod
     def invoke(cwd, args):
-        Helper.announce("Running %s :: %s" % (cwd, args))
+        print(">>>>> Running %s :: %s" % (cwd, args))
         try:
             if not os.path.exists(cwd):
                 os.makedirs(cwd)
@@ -75,21 +71,6 @@ class Helper(object):
                         path.remove(j)
             fst.extend(path)
         return fst
-
-    @staticmethod
-    def merge_dir_into(source, target):
-        Helper.announce("Merging dir %s -> %s" % (source, target))
-        cwd_prev = os.getcwd()
-        os.chdir(source)
-        for (d, _, fs) in os.walk("."):
-            d_to = os.path.join(target, d)
-            if not os.path.exists(d_to):
-                os.makedirs(d_to)
-            for f in fs:
-                f_from = os.path.join(d, f)
-                f_to = os.path.join(d_to, f)
-                shutil.move(f_from, f_to)
-        os.chdir(cwd_prev)
 
 class Phase(object):
     fetch, configure, build, install = range(4)
@@ -186,54 +167,48 @@ class Package(object):
 
     def fetch_url(self, index):
         """Tries to fetch any type of archive and decide how to proceed by file
-        type detection. Supports multiple urls."""
-        # clear out destination dir
+        type detection"""
+        Helper.set_term_title("%s Fetching %s from %s" %
+                              (index, self.name, self.fetch_url))
         workdir = os.path.join(self.src_path, self.src_dir)
-        if os.path.exists(workdir):
-            shutil.rmtree(workdir)
-
-        urls = self.fetch_url
-        if urls.__class__ == str:
-            urls = [urls]
-        for url in urls:
-            Helper.set_term_title("%s Fetching %s from %s" %
-                                  (index, self.name, url))
-            # download to downloads dir
-            downdir = os.path.join(self.src_path, "downloads")
-            filename = os.path.basename(url)
-            if os.path.exists(downdir):
-                shutil.rmtree(downdir)
-            Helper.invoke(downdir,"(wget %s || curl %s -o %s)" % (url, url, filename))
-            # extract if archive
+        # download to downloads dir
+        downdir = os.path.join(self.src_path, "downloads")
+        filename = os.path.basename(self.fetch_url)
+        if os.path.exists(downdir):
+            shutil.rmtree(downdir)
+        Helper.invoke(downdir,"(wget %s || curl %s -o %s)" % (self.fetch_url,
+                                                              self.fetch_url,
+                                                              filename))
+        # extract if archive
+        filename = glob.glob(os.path.join(downdir, "*"))[0]
+        type = Helper.invoke(downdir, "file %s" % filename)
+        if re.search("gzip compressed data", type):
+            Helper.invoke(downdir, "gzip -d %s" % filename)
             filename = glob.glob(os.path.join(downdir, "*"))[0]
             type = Helper.invoke(downdir, "file %s" % filename)
-            if re.search("gzip compressed data", type):
-                Helper.invoke(downdir, "gzip -d %s" % filename)
-                filename = glob.glob(os.path.join(downdir, "*"))[0]
-                type = Helper.invoke(downdir, "file %s" % filename)
-            if re.search("bzip2 compressed data", type):
-                Helper.invoke(downdir, "bzip2 -d %s" % filename)
-                filename = glob.glob(os.path.join(downdir, "*"))[0]
-                type = Helper.invoke(downdir, "file %s" % filename)
-            if re.search("tar archive", type):
-                Helper.invoke(downdir, "tar -v -xf - < %s" % filename)
-                Helper.invoke(downdir, "rm -f %s" % filename)
-            if re.search("Zip archive data", type):
-                Helper.invoke(downdir, "unzip %s" % filename)
-                Helper.invoke(downdir, "rm -f %s" % filename)
-            # try to detect if we extracted to a subdir or not
-            gl = glob.glob(os.path.join(downdir, "*"))
-            if len(gl) == 1 and os.path.isdir(gl[0]):
-                # if yes, anchor inside subdir
-                dir = os.path.join(downdir, gl[0])
-            else:
-                # if no, anchor in downloads dir
-                dir = downdir
-            # merge all items recursively into (possibly existing) workdir
-            Helper.merge_dir_into(dir, workdir)
-
-            if os.path.exists(downdir):
-                shutil.rmtree(downdir)
+        if re.search("bzip2 compressed data", type):
+            Helper.invoke(downdir, "bzip2 -d %s" % filename)
+            filename = glob.glob(os.path.join(downdir, "*"))[0]
+            type = Helper.invoke(downdir, "file %s" % filename)
+        if re.search("tar archive", type):
+            Helper.invoke(downdir, "tar -v -xf - < %s" % filename)
+            Helper.invoke(downdir, "rm -f %s" % filename)
+        if re.search("Zip archive data", type):
+            Helper.invoke(downdir, "unzip %s" % filename)
+            Helper.invoke(downdir, "rm -f %s" % filename)
+        # try to detect if we extracted to a subdir or not
+        gl = glob.glob(os.path.join(downdir, "*"))
+        if len(gl) == 1 and os.path.isdir(gl[0]):
+            # if yes, anchor inside subdir
+            dir = os.path.join(downdir, gl[0])
+        else:
+            # if no, anchor in downloads dir
+            dir = downdir
+        # move all items recursively to workdir
+        Helper.invoke(dir, "mkdir -p %s" % workdir)
+        Helper.invoke(dir, "mv * %s" % workdir)
+        if os.path.exists(downdir):
+            shutil.rmtree(downdir)
 
     def configure(self, index):
         Helper.set_term_title("%s Configuring %s" % (index, self.name))
