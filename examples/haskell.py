@@ -12,7 +12,7 @@ project = {
                 "rpm2cpio *.rpm | cpio -idmv",
                 "rm -f *.rpm",
             ]),
-            "install": "cp -r * %s" % ins_path,
+            "install": "mkdir -p %s && cp -r * %s" % (ins_path, ins_path),
         },
         # Binary x86 package, building from source fails.
         # Missing realine4 on Ubuntu jaunty
