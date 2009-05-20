@@ -1,4 +1,4 @@
-ins_path = "/home/alex/t"
+ins_path = "/home/alex/t/haskell"
 
 project = {
     "ins_path": ins_path,
@@ -18,7 +18,8 @@ project = {
         "ghc-6.8.1": {
             "url": [
                 "http://www.haskell.org/ghc/dist/6.8.1/ghc-6.8.1-src.tar.bz2",
-                "http://www.haskell.org/ghc/dist/6.8.1/ghc-6.8.1-src-extralibs.tar.bz2"],
+                "http://www.haskell.org/ghc/dist/6.8.1/ghc-6.8.1-src-extralibs.tar.bz2"
+            ],
             "configure": "./configure --prefix %s" % ins_path,
             "build": "make",
             "install": "make install",
