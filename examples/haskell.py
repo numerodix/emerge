@@ -35,7 +35,7 @@ project = {
                  "(cd lvm/src/runtime && make depend)",
                  "(cd helium && ./configure --prefix %s)" % ins_path,
                  "(cd helium/src && make)"]),
-            "install": "cd helium && make install",
+            "install": "(cd helium/src && make install)",
             "deps": ["ghc-6.8.1"],
         },
     },
