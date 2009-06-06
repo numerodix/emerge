@@ -125,7 +125,7 @@ project = {
             "rev": "1.0",
             "build": "make",
             "install": "./gui",
-            "deps": [libgdiplus, mono, monodevelop],
+            "deps": [libgdiplus, mono],
         },
     },
 }
